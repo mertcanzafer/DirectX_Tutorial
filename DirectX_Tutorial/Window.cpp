@@ -106,6 +106,21 @@ LRESULT Window::HandleMsg
 	case WM_CLOSE:
 		PostQuitMessage(0);
 		return 0;break;
+	case WM_CHAR:
+	{
+		static std::string title;
+		title += (char)wParam;
+		SetWindowTextA(hWnd, title.c_str());
+	}
+	break;
+	case WM_LBUTTONDOWN:
+	{
+		std::ostringstream ShowPoints;
+		POINTS pts = MAKEPOINTS(lParam);
+		ShowPoints << "(" << pts.x << " , " << pts.y << ")";
+		SetWindowTextA(hWnd, ShowPoints.str().c_str());
+	}
+	break;
 	}
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
