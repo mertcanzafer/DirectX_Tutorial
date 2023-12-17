@@ -33,7 +33,7 @@ private:
 	UINT32 width;
 	UINT32 height;
 	HWND hWnd;
-
+	static int WindowObjectCount;
 public:
 	Window(UINT32 width, UINT32 height,const char* name)noexcept;
 	~Window();

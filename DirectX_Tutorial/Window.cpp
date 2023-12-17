@@ -1,5 +1,6 @@
 #include "Window.h"
 Window::WindowClass Window::WindowClass::wndClass;
+int Window::WindowObjectCount = 0;
 
 Window::WindowClass::WindowClass()noexcept
 	:hInstance{GetModuleHandle(nullptr)}
@@ -56,6 +57,7 @@ Window::Window(UINT32 width, UINT32 height, const char* name)noexcept
 
 	// show Window 
 	ShowWindow(hWnd, SW_SHOWDEFAULT);
+	WindowObjectCount++;
 }
 
 Window::~Window()
@@ -104,21 +106,16 @@ LRESULT Window::HandleMsg
 	switch (msg)
 	{
 	case WM_CLOSE:
-		PostQuitMessage(0);
-		return 0;break;
-	case WM_CHAR:
 	{
-		static std::string title;
-		title += (char)wParam;
-		SetWindowTextA(hWnd, title.c_str());
-	}
-	break;
-	case WM_LBUTTONDOWN:
-	{
-		std::ostringstream ShowPoints;
-		POINTS pts = MAKEPOINTS(lParam);
-		ShowPoints << "(" << pts.x << " , " << pts.y << ")";
-		SetWindowTextA(hWnd, ShowPoints.str().c_str());
+		char charBuff[50];
+		std::string currWindowTitle;
+		GetWindowText(hWnd, charBuff, 50);
+		currWindowTitle = charBuff;
+		if (currWindowTitle == "<Direct3D> Graphics Program")
+		{
+			PostQuitMessage(0);
+			return 0;
+		}
 	}
 	break;
 	}

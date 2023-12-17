@@ -1,6 +1,8 @@
 #include "Window.h"
 
 Window window(980, 720,"<Direct3D> Graphics Program");
+Window window2(980, 720, "<Direct3D> Window");
+Window window3(980, 720, "<Direct3D> Window2");
 
 int CALLBACK WinMain(
 	HINSTANCE hInstance,
