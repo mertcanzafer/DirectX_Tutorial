@@ -107,11 +107,13 @@ LRESULT Window::HandleMsg
 	{
 	case WM_CLOSE:
 	{
-		char charBuff[50];
-		std::string currWindowTitle;
+		const int BuffSize = 50;
+		char charBuff[BuffSize];
+		char currWindowTitle[BuffSize];
 		GetWindowText(hWnd, charBuff, 50);
-		currWindowTitle = charBuff;
-		if (currWindowTitle == "<Direct3D> Graphics Program")
+		strcpy_s(currWindowTitle, charBuff);
+
+		if (strcmp(currWindowTitle, "<Direct3D> Graphics Program") == 0)
 		{
 			PostQuitMessage(0);
 			return 0;

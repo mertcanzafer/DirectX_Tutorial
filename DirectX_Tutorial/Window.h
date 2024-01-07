@@ -1,6 +1,7 @@
 #pragma once
 #include "FixedWin.h"
 #include <string>
+#include <cstring>
 #include <sstream>
 class Window
 {
