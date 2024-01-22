@@ -3,8 +3,28 @@
 #include <string>
 #include <cstring>
 #include <sstream>
+
+// First add Window Exception
+#include "Exception_Handler.h"
+#include "resource.h"
+
 class Window
 {
+public:
+	class Exception :public Exception_Handler
+	{
+	public:
+		Exception(int line,const char* file,HRESULT hr)noexcept;
+		const char* what()const noexcept override;
+		const char* m_getType()const noexcept override;
+
+		static std::string m_TranslateErrorCode(HRESULT hr)noexcept;
+		HRESULT m_getErrorCode()const noexcept;
+		std::string m_getErrorString()const noexcept;
+	private:
+		HRESULT hr;
+	};
+
 private:
 	// singleton manages registration/cleanup of window class
 	class WindowClass 
@@ -36,10 +56,14 @@ private:
 	HWND hWnd;
 	static int WindowObjectCount;
 public:
-	Window(UINT32 width, UINT32 height,const char* name)noexcept;
+	Window(UINT32 width, UINT32 height,const char* name);
 	~Window();
 
 	Window(const Window& copy) = delete;
 	Window& operator=(const Window& rhs) = delete;
 };
 
+// Error exception helper macro
+
+#define CHWND_EXCEPT(hr) Window::Exception( __LINE__,__FILE__,hr)
+#define CHWND_LAST_EXCEPT() Window::Exception(__LINE__,__FILE__,GetLastError());

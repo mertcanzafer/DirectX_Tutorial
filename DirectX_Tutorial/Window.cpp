@@ -12,12 +12,12 @@ Window::WindowClass::WindowClass()noexcept
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
 	wc.hInstance = getInstance();
-	wc.hIcon = nullptr;
+	wc.hIcon = static_cast<HICON>(LoadImage(hInstance,MAKEINTRESOURCE(IDI_ICON1),IMAGE_ICON,32,32,0));
 	wc.hCursor = nullptr;
 	wc.hbrBackground = nullptr;
 	wc.lpszMenuName = nullptr;
 	wc.lpszClassName = getName();
-	wc.hIconSm = nullptr;
+	wc.hIconSm = static_cast<HICON>(LoadImage(hInstance, MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, 16, 16, 0));
 	RegisterClassEx(&wc);
 }
 
@@ -38,7 +38,7 @@ HINSTANCE Window::WindowClass::getInstance()noexcept
 
 // Window stuff
 
-Window::Window(UINT32 width, UINT32 height, const char* name)noexcept
+Window::Window(UINT32 width, UINT32 height, const char* name)
 {
 	// calculate window size based on desired client region size
 	RECT wr;
@@ -47,13 +47,28 @@ Window::Window(UINT32 width, UINT32 height, const char* name)noexcept
 	wr.top = 100;
 	wr.bottom = height + wr.top;
 
-	AdjustWindowRect(&wr, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, FALSE);
-	// create window and get hWnd
+	if (FAILED(AdjustWindowRect(&wr, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, FALSE)) < 0)
+	{
+		throw CHWND_LAST_EXCEPT();
+	}
 
+	// Testing exception working
+	//throw CHWND_EXCEPT(ERROR_ARENA_TRASHED);
+	//throw CHWND_LAST_EXCEPT();
+	//throw std::runtime_error("Out of time interval");
+	//throw 312312313;
+
+	// create window and get hWnd
 	hWnd = CreateWindow(WindowClass::getName(), name,
 		WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU,
 		CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top,
 		nullptr, nullptr, WindowClass::getInstance(), this);
+	// check for error
+	
+	if (hWnd == nullptr)
+	{
+		throw CHWND_LAST_EXCEPT();
+	}
 
 	// show Window 
 	ShowWindow(hWnd, SW_SHOWDEFAULT);
@@ -123,3 +138,53 @@ LRESULT Window::HandleMsg
 	}
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
+
+// Window Exception stuff
+
+Window::Exception::
+Exception(int line, const char* file, HRESULT hr) noexcept:Exception_Handler(line,file),hr{hr}{}
+
+const char* Window::Exception::
+what() const noexcept
+{
+	std::ostringstream oss;
+	oss << m_getType() << std::endl
+		<< "[Error Code] " << m_getErrorCode() << std::endl
+		<< "[Description] " << m_getErrorString() << std::endl
+		<< m_getOriginString();
+	whatBuffer = oss.str();
+	return whatBuffer.c_str();
+}
+
+const char* Window::Exception::m_getType() const noexcept
+{
+	return "Window Exception!";
+}
+
+std::string Window::Exception::m_TranslateErrorCode(HRESULT hr) noexcept
+{
+	LPTSTR pMsgBuff = nullptr;
+	// windows will allocate memory for err string and make our pointer point to it
+	const DWORD nMsgLen = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS
+		| FORMAT_MESSAGE_FROM_SYSTEM,
+		nullptr, hr, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		reinterpret_cast<LPSTR>(&pMsgBuff), 0, nullptr
+	);
+
+	if (nMsgLen == 0) return "Unidentified error code";
+	
+	std::string errorString{ pMsgBuff };
+	LocalFree(pMsgBuff);
+	return errorString;
+}
+
+HRESULT Window::Exception::m_getErrorCode() const noexcept
+{
+	return hr;
+}
+
+std::string Window::Exception::m_getErrorString() const noexcept
+{
+	return m_TranslateErrorCode(hr);
+}
+
