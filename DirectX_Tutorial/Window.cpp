@@ -47,7 +47,7 @@ Window::Window(UINT32 width, UINT32 height, const char* name)
 	wr.top = 100;
 	wr.bottom = height + wr.top;
 
-	if (FAILED(AdjustWindowRect(&wr, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, FALSE)) < 0)
+	if (FAILED(AdjustWindowRect(&wr, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, FALSE)))
 	{
 		throw CHWND_LAST_EXCEPT();
 	}
@@ -133,6 +133,33 @@ LRESULT Window::HandleMsg
 			PostQuitMessage(0);
 			return 0;
 		}
+	}
+	break;
+	// clear keystate when window loses focus to prevent input getting "stuck"
+	case WM_KILLFOCUS:
+	{
+		kbd.ClearState();
+	}
+	break;
+	case WM_KEYDOWN:
+	{
+	// syskey commands need to be handled to track ALT key (VK_MENU) and F10
+	case WM_SYSKEYDOWN:
+		if (!(lParam & 0x04000000) || kbd.AutoRepeatIsEnabled())// filter autorepeat
+		{
+			kbd.OnKeyPressed(static_cast<uint8_t> (wParam));
+		}
+	}
+	break;
+	case WM_KEYUP:
+	{
+		kbd.OnKeyReleased(static_cast<uint8_t>(wParam));
+	}
+	break;
+
+	case WM_CHAR:
+	{
+		kbd.OnChar(static_cast<char>(wParam));
 	}
 	break;
 	}

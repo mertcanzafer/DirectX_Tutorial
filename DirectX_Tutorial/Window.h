@@ -8,6 +8,8 @@
 #include "Exception_Handler.h"
 #include "resource.h"
 
+#include "Keyboard.h"
+
 class Window
 {
 public:
@@ -61,6 +63,8 @@ public:
 
 	Window(const Window& copy) = delete;
 	Window& operator=(const Window& rhs) = delete;
+public:
+	Keyboard kbd;
 };
 
 // Error exception helper macro
