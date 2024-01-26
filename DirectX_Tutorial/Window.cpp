@@ -38,7 +38,7 @@ HINSTANCE Window::WindowClass::getInstance()noexcept
 
 // Window stuff
 
-Window::Window(UINT32 width, UINT32 height, const char* name)
+Window::Window(UINT32 width, UINT32 height, const char* name):width{width},height{height}
 {
 	// calculate window size based on desired client region size
 	RECT wr;
@@ -47,16 +47,10 @@ Window::Window(UINT32 width, UINT32 height, const char* name)
 	wr.top = 100;
 	wr.bottom = height + wr.top;
 
-	if (FAILED(AdjustWindowRect(&wr, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, FALSE)))
+	if (AdjustWindowRect(&wr, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, FALSE) == 0)
 	{
 		throw CHWND_LAST_EXCEPT();
 	}
-
-	// Testing exception working
-	//throw CHWND_EXCEPT(ERROR_ARENA_TRASHED);
-	//throw CHWND_LAST_EXCEPT();
-	//throw std::runtime_error("Out of time interval");
-	//throw 312312313;
 
 	// create window and get hWnd
 	hWnd = CreateWindow(WindowClass::getName(), name,
@@ -78,6 +72,14 @@ Window::Window(UINT32 width, UINT32 height, const char* name)
 Window::~Window()
 {
 	DestroyWindow(hWnd);
+}
+
+void Window::m_SetTitle(const char* title) noexcept
+{
+	if (SetWindowText(hWnd, title) == 0)
+	{
+		throw CHWND_LAST_EXCEPT();
+	}
 }
 
 LRESULT Window::HandleMsgSetup
@@ -122,16 +124,28 @@ LRESULT Window::HandleMsg
 	{
 	case WM_CLOSE:
 	{
-		const int BuffSize = 50;
-		char charBuff[BuffSize];
-		char currWindowTitle[BuffSize];
-		GetWindowText(hWnd, charBuff, 50);
-		strcpy_s(currWindowTitle, charBuff);
-
-		if (strcmp(currWindowTitle, "<Direct3D> Graphics Program") == 0)
+		if (WindowObjectCount > 1)
 		{
-			PostQuitMessage(0);
-			return 0;
+			WindowObjectCount--;
+			const int BuffSize = 50;
+
+			char charBuff[BuffSize];
+			char currWindowTitle[BuffSize];
+
+			GetWindowText(hWnd, charBuff, 50);
+			strcpy_s(currWindowTitle, charBuff);
+
+			if (strcmp(currWindowTitle, "<Direct3D> Graphics Program") == 0)
+			{
+				PostQuitMessage(0);
+				return 0;
+			}
+		}
+		else 
+		{
+		  WindowObjectCount--;
+		  PostQuitMessage(0);
+		  return 0;
 		}
 	}
 	break;
@@ -160,6 +174,86 @@ LRESULT Window::HandleMsg
 	case WM_CHAR:
 	{
 		kbd.OnChar(static_cast<char>(wParam));
+	}
+	break;
+	// **************************** MOUSE MESSAGES *****************************************
+	case WM_MOUSEMOVE:
+	{
+		const POINTS p = MAKEPOINTS(lParam);
+		// in client region -> log move, and log enter + capture mouse (if not previously in window)
+		if ((p.x >= 0 && p.x < width) && (p.y >= 0 && p.y < height))
+		{
+			mouse.OnMouseMove(p.x, p.y);
+			if (!mouse.IsInWindow())
+			{
+				SetCapture(hWnd);
+				mouse.OnMouseEnter();
+			}
+		}
+		// not in client -> log move / maintain capture if button down
+		else 
+		{
+			if (mouse.LeftIsPressed() || mouse.RightIsPressed() || mouse.ScrollIsPressed())
+			{
+				mouse.OnLeftPressed(p.x, p.y);
+			}
+			// button up -> release capture / log event for leaving
+			else 
+			{
+				ReleaseCapture();
+				mouse.OnMouseLeave();
+			}
+		}
+	}
+	break;
+
+	case WM_LBUTTONDOWN:
+	{
+		const POINTS p = MAKEPOINTS(lParam);
+		mouse.OnLeftPressed(p.x, p.y);
+	}
+	break;
+
+	case WM_RBUTTONDOWN:
+	{
+		const POINTS p = MAKEPOINTS(lParam);
+		mouse.OnRightPressed(p.x, p.y);
+	}
+	break;
+	
+	case WM_MBUTTONDOWN:
+	{
+		const POINTS p = MAKEPOINTS(lParam);
+		mouse.OnScrollPressed(p.x, p.y);
+	}
+	break;
+
+	case WM_LBUTTONUP:
+	{
+		const POINTS p = MAKEPOINTS(lParam);
+		mouse.OnLeftReleased(p.x, p.y);
+	}
+	break;
+	
+	case WM_RBUTTONUP:
+	{
+		const POINTS p = MAKEPOINTS(lParam);
+		mouse.OnRightReleased(p.x, p.y);
+	}
+	break;
+
+	case WM_MBUTTONUP:
+	{
+		const POINTS p = MAKEPOINTS(lParam);
+		mouse.OnScrollReleased(p.x, p.y);
+	}
+	break;
+
+	case WM_MOUSEWHEEL:
+	{
+		const POINTS p = MAKEPOINTS(lParam);
+		const int delta = GET_WHEEL_DELTA_WPARAM(wParam);
+		mouse.OnWheelDelta(p.x, p.y, delta);
 	}
 	break;
 	}

@@ -9,6 +9,7 @@
 #include "resource.h"
 
 #include "Keyboard.h"
+#include "Mouse.h"
 
 class Window
 {
@@ -63,8 +64,11 @@ public:
 
 	Window(const Window& copy) = delete;
 	Window& operator=(const Window& rhs) = delete;
+
+	void m_SetTitle(const char* title)noexcept;
 public:
 	Keyboard kbd;
+	Mouse mouse;
 };
 
 // Error exception helper macro

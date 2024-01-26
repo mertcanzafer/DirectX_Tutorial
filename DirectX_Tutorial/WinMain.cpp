@@ -16,12 +16,6 @@ int CALLBACK WinMain(
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
-
-			if (window.kbd.KeyIsPressed(VK_MENU))
-			{
-				MessageBox(nullptr, "Something Happend!", "alt key was pressed!", MB_OK | MB_ICONEXCLAMATION);
-			}
-
 		}
 
 		if (gReseult == -1) return -1;

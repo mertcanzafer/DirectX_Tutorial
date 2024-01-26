@@ -1,4 +1,5 @@
 #include "Mouse.h"
+#include "FixedWin.h"
 
 std::pair<int, int> Mouse::GetPos() const noexcept
 {
@@ -37,7 +38,7 @@ bool Mouse::ScrollIsPressed() const noexcept
 
 Mouse::Event Mouse::Read() noexcept
 {
-    if (buffer.size() > 0)
+    if (buffer.size() > 0u)
     {
         Mouse::Event e = buffer.front();
         buffer.pop();
@@ -132,7 +133,7 @@ void Mouse::OnWheelDown(int x, int y) noexcept
 
 void Mouse::TrimBuffer() noexcept
 {
-    if (bufferSize > buffer.size())
+    while (bufferSize < buffer.size())
     {
         buffer.pop();
     }
@@ -141,6 +142,18 @@ void Mouse::TrimBuffer() noexcept
 void Mouse::OnWheelDelta(int x, int y, int delta) noexcept
 {
     // Wheel Delta Factor
+    wheelDeltaCarry += delta;
+    // generate events for every 120 
+    while (wheelDeltaCarry >= WHEEL_DELTA)
+    {
+        wheelDeltaCarry -= WHEEL_DELTA;
+        OnWheelUp(x, y);
+    }
+    while (wheelDeltaCarry <= -WHEEL_DELTA)
+    {
+        wheelDeltaCarry += WHEEL_DELTA;
+        OnWheelDown(x, y);
+    }
 }
 
 

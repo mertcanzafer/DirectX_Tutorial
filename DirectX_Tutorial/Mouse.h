@@ -33,14 +33,11 @@ public:
 		Event()noexcept:type{Type::Invalid}, leftIsPressed{false},
 			rightIsPressed{ false }, scrollIsPressed{false}, x{ 0 }, y{ 0 } {}
 		Event(Type type, const Mouse& parent)noexcept
-		{
-			this->type = type;
-			leftIsPressed = parent.leftIsPressed;
-			rightIsPressed = parent.rightIsPressed;
-			scrollIsPressed = parent.scrollIsPressed;
-		}
+			:type{type},leftIsPressed{parent.leftIsPressed},
+			rightIsPressed{parent.rightIsPressed},scrollIsPressed{parent.scrollIsPressed},
+			x{parent.x},y{parent.y}{}
 
-		bool IsVald()const noexcept
+		bool IsValid()const noexcept
 		{
 			return type != Type::Invalid;
 		}
@@ -49,9 +46,9 @@ public:
 		std::pair<int, int> getPos()const noexcept { return { x,y }; }
 		int getXpos()const noexcept { return x; }
 		int getYpos()const noexcept { return y; }
-		bool LeftIsPressed()const noexcept { return LeftIsPressed; }
-		bool RightIsPressed()const noexcept { return RightIsPressed; }
-		bool ScrollIsPressed()const noexcept { return ScrollIsPressed; }
+		bool LeftIsPressed()const noexcept { return leftIsPressed; }
+		bool RightIsPressed()const noexcept { return rightIsPressed; }
+		bool ScrollIsPressed()const noexcept { return scrollIsPressed; }
 	};
 
 public:
@@ -73,7 +70,6 @@ public:
 		return buffer.empty();
 	}
 	void Flush()noexcept;
-
 private:
 	// Methods
 	void OnMouseMove(int x, int y)noexcept;
