@@ -10,6 +10,7 @@
 
 #include "Keyboard.h"
 #include "Mouse.h"
+#include <optional>
 
 class Window
 {
@@ -66,6 +67,7 @@ public:
 	Window& operator=(const Window& rhs) = delete;
 
 	void m_SetTitle(const char* title)noexcept;
+	static std::optional<int> ProcessMessages();
 public:
 	Keyboard kbd;
 	Mouse mouse;

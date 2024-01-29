@@ -82,6 +82,27 @@ void Window::m_SetTitle(const char* title) noexcept
 	}
 }
 
+std::optional<int> Window::ProcessMessages()
+{
+	MSG msg{};
+	// While queue has messages, remove and dispatch them(but do not block the app If there is no messages
+
+	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+	{
+		// Check for quit because peek message ain't signal this via return
+		if (msg.message == WM_QUIT)
+		{
+			// return optional wrapping int(arg to PostQuiteMessage)
+			return msg.wParam;
+		}
+
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+	// return empty optional When not quitting App
+	return {};
+}
+
 LRESULT Window::HandleMsgSetup
 (
 	HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
