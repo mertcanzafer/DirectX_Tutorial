@@ -12,6 +12,8 @@
 #include "Mouse.h"
 #include <optional>
 
+#include "Graphics.h"
+
 class Window
 {
 public:
@@ -59,6 +61,10 @@ private:
 	UINT32 height;
 	HWND hWnd;
 	static int WindowObjectCount;
+	graphics::Graphics* pGfx;
+
+private:
+	void DestroyGfx();
 public:
 	Window(UINT32 width, UINT32 height,const char* name);
 	~Window();
@@ -68,6 +74,7 @@ public:
 
 	void m_SetTitle(const char* title)noexcept;
 	static std::optional<int> ProcessMessages();
+	graphics::Graphics& Gfx()const;
 public:
 	Keyboard kbd;
 	Mouse mouse;

@@ -24,10 +24,9 @@ App::Go()
 void App::
 DoFrame()
 {
-	const float t = timer.Peek();
-	std::ostringstream oss;
-	oss << "Time elapsed: "<<std::setprecision(2)<<t<<std::fixed<<" in seconds";
-	window->m_SetTitle(oss.str().c_str());
+	const float c = sin(timer.Peek()) / 2.0f + 0.5f;
+	window->Gfx().ClearBuffer(1.0f, c,0.0f);
+	window->Gfx().EndFrame();
 }
 
 App::~App()

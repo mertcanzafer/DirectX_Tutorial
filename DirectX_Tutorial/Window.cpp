@@ -1,4 +1,7 @@
 #include "Window.h"
+
+#pragma comment(lib,"d3d11.lib")
+
 Window::WindowClass Window::WindowClass::wndClass;
 int Window::WindowObjectCount = 0;
 
@@ -38,7 +41,7 @@ HINSTANCE Window::WindowClass::getInstance()noexcept
 
 // Window stuff
 
-Window::Window(UINT32 width, UINT32 height, const char* name):width{width},height{height}
+Window::Window(UINT32 width, UINT32 height, const char* name):width{width},height{height},pGfx{nullptr}
 {
 	// calculate window size based on desired client region size
 	RECT wr;
@@ -64,14 +67,23 @@ Window::Window(UINT32 width, UINT32 height, const char* name):width{width},heigh
 		throw CHWND_LAST_EXCEPT();
 	}
 
-	// show Window 
+	// newly created window start off as hidden
 	ShowWindow(hWnd, SW_SHOWDEFAULT);
 	WindowObjectCount++;
+
+	// Create graphics object
+	pGfx = new graphics::Graphics(this->hWnd);
+}
+
+void Window::DestroyGfx()
+{
+	delete pGfx;
 }
 
 Window::~Window()
 {
 	DestroyWindow(hWnd);
+	DestroyGfx();
 }
 
 void Window::m_SetTitle(const char* title) noexcept
@@ -101,6 +113,11 @@ std::optional<int> Window::ProcessMessages()
 	}
 	// return empty optional When not quitting App
 	return {};
+}
+
+graphics::Graphics& Window::Gfx() const
+{
+	return *pGfx;
 }
 
 LRESULT Window::HandleMsgSetup
