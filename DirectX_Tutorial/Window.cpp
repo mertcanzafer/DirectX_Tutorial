@@ -117,6 +117,10 @@ std::optional<int> Window::ProcessMessages()
 
 graphics::Graphics& Window::Gfx() const
 {
+	if (!pGfx)
+	{
+		throw CHWND_NO_GFX_EXCEPT();
+	}
 	return *pGfx;
 }
 
@@ -347,3 +351,10 @@ std::string Window::Exception::m_getErrorString() const noexcept
 	return m_TranslateErrorCode(hr);
 }
 
+Window::NoGFXException::NoGFXException(int line, const char* file) noexcept
+	:Exception_Handler(line,file){}
+
+const char* Window::NoGFXException::m_getType() const noexcept
+{
+	return "Window Exception [No Graphics]";
+}

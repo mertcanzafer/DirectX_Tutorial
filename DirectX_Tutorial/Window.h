@@ -31,6 +31,13 @@ public:
 		HRESULT hr;
 	};
 
+	class NoGFXException : public Exception_Handler
+	{
+	public:
+		NoGFXException(int line, const char* file)noexcept;
+		const char* m_getType()const noexcept override;
+	};
+
 private:
 	// singleton manages registration/cleanup of window class
 	class WindowClass 
@@ -84,3 +91,4 @@ public:
 
 #define CHWND_EXCEPT(hr) Window::Exception( __LINE__,__FILE__,hr)
 #define CHWND_LAST_EXCEPT() Window::Exception(__LINE__,__FILE__,GetLastError());
+#define CHWND_NO_GFX_EXCEPT() Window::NoGFXException(__LINE__,__FILE__)

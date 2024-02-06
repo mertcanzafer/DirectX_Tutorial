@@ -1,6 +1,7 @@
 #pragma once
 #include <exception>
 #include <sstream>
+#include <string>
 
 class Exception_Handler: public std::exception
 {
