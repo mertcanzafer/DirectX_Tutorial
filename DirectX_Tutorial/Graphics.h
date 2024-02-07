@@ -6,6 +6,7 @@
 #include "DxgiInfoManager.h"
 
 #include "dxerr.h"
+#include <wrl.h>
 
 namespace graphics
 {
@@ -50,15 +51,15 @@ namespace graphics
 		void EndFrame();
 		void ClearBuffer(float red, float green, float blue)noexcept;
 
-		~Graphics();
+		~Graphics() = default;
 	private:
 	// When building the project in debug mode (not in released mode)
 #ifndef NDEBUG
 		DxgiInfoManager infoManager;
 #endif
-		IDXGISwapChain* pSwapChain;
-		ID3D11Device* pDevice;
-		ID3D11DeviceContext* pImmediateContext;
-		ID3D11RenderTargetView* pTarget;
+		Microsoft::WRL::ComPtr<IDXGISwapChain>pSwapChain;
+		Microsoft::WRL::ComPtr<ID3D11Device>pDevice;
+		Microsoft::WRL::ComPtr<ID3D11DeviceContext>pImmediateContext;
+		Microsoft::WRL::ComPtr<ID3D11RenderTargetView>pTarget;
 	};
 }
