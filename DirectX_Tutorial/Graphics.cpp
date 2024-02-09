@@ -1,5 +1,7 @@
 #include "Graphics.h"
 
+#pragma comment(lib,"D3DCompiler.lib") 
+
 // graphics exception checking/throwing macros (some with dxgi infos)
 #define GFX_EXCEPT_NOINFO(hr) Graphics::HrException( __LINE__,__FILE__,(hr) )
 #define GFX_THROW_NOINFO(hrcall) if( FAILED( hr = (hrcall) ) ) throw Graphics::HrException( __LINE__,__FILE__,hr )
@@ -8,10 +10,12 @@
 #define GFX_EXCEPT(hr) Graphics::HrException( __LINE__,__FILE__,(hr),infoManager.GetMessage() )
 #define GFX_THROW_INFO(hrcall) infoManager.Set(); if( FAILED( hr = (hrcall) ) ) throw GFX_EXCEPT(hr)
 #define GFX_DEVICE_REMOVED_EXCEPT(hr) Graphics::DeviceRemovedException( __LINE__,__FILE__,(hr),infoManager.GetMessage() )
+#define GFX_THROW_INFO_ONLY(call) infoManager.Set(); (call); {auto v = infoManager.GetMessage(); if(!v.empty()){throw graphics::Graphics::InfoException( __LINE__,__FILE__,v);}} 
 #else
 #define GFX_EXCEPT(hr) Graphics::HrException( __LINE__,__FILE__,(hr) )
 #define GFX_THROW_INFO(hrcall) GFX_THROW_NOINFO(hrcall)
 #define GFX_DEVICE_REMOVED_EXCEPT(hr) Graphics::DeviceRemovedException( __LINE__,__FILE__,(hr) )
+#define GFX_THROW_INFO_ONLY(call) (call)
 #endif
 
 namespace wrl = Microsoft::WRL;
@@ -108,6 +112,57 @@ namespace graphics
 		const float color[]{ red,green,blue ,1.0f}; // RGBA format red + green + blue + Alpha Channel(1.0f)
 		pImmediateContext->ClearRenderTargetView(pTarget.Get(), color);
 	}
+
+	void Graphics::DrawTestTriangle()
+	{
+		HRESULT hr;
+		struct Vertex
+		{
+			float x;
+			float y;
+		};
+		// create vertex buffer (1 2d Triangle at the center of the screen)
+		const Vertex vertices[] =
+		{
+			Vertex(	0.0f,	1.0f),   //
+			Vertex(	-1.0f,	-1.0f),  //   CCLW Order of drawing?
+			Vertex(	1.0f,	-1.0f)   //
+		};
+
+		wrl::ComPtr<ID3D11Buffer>pVertexBuffer;
+
+		D3D11_BUFFER_DESC bd = {};
+		bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		bd.Usage = D3D11_USAGE_DEFAULT;
+		bd.CPUAccessFlags = 0u;
+		bd.MiscFlags = 0u;
+		bd.ByteWidth = sizeof(vertices); // size of vertices in byte
+		bd.StructureByteStride = sizeof(Vertex);
+
+		D3D11_SUBRESOURCE_DATA sd = {};
+		sd.pSysMem = vertices;
+
+		GFX_THROW_INFO (pDevice->CreateBuffer(&bd, &sd, &pVertexBuffer));
+
+		// Bind the vertex pipeline
+		const UINT stride = sizeof(Vertex);
+		const UINT offset = 0u;
+
+		pImmediateContext->IASetVertexBuffers(0u, 1u, &pVertexBuffer, &stride, &offset);
+		
+		// Creat Vertex Shader
+		wrl::ComPtr<ID3D11VertexShader> pVertexShader;
+		wrl::ComPtr<ID3DBlob> pBlob;
+
+		GFX_THROW_INFO (D3DReadFileToBlob(L"VertexShader.cso", &pBlob));
+		GFX_THROW_INFO (pDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(),
+			nullptr, &pVertexShader));
+
+		// Bind the vertex Shader
+		pImmediateContext->VSSetShader(pVertexShader.Get(), 0, 0);
+
+		GFX_THROW_INFO_ONLY (pImmediateContext->Draw((UINT)sizeof(vertices), 0u));
+	}
 	// Exception Stuff
 
 	Graphics::HrException::HrException(int line, const char* file, HRESULT hr, std::vector<std::string>InfoMsgs) noexcept
@@ -116,7 +171,8 @@ namespace graphics
 		// join all info messages with newlines into single string
 		for (const auto& m : InfoMsgs)
 		{
-			Info.append(m + "\n");
+			Info += m;
+			Info.push_back('\n');
 		}
 		// Remove Final newline if exits.
 		if (!Info.empty())
@@ -173,5 +229,36 @@ namespace graphics
 	const char* Graphics::DeviceRemovedException::m_getType() const noexcept
 	{
 		return "Graphics Exception [Device Removed] (DXGI_ERROR_DEVICE_REMOVED)";
+	}
+	Graphics::InfoException::InfoException(int line, const char* file, std::vector<std::string> InfoMsgs)
+		:Exception(line,file)
+	{
+		for (const auto& m : InfoMsgs)
+		{
+			Info += m;
+			Info.push_back('\n');
+		}
+
+		if (!Info.empty())
+		{
+			Info.pop_back();
+		}
+	}
+	const char* Graphics::InfoException::what() const noexcept
+	{
+		std::ostringstream oss;
+		oss <<m_getType() << std::endl
+			<< "\n[Error Info]\n" << m_GetErrorInfo() << std::endl << std::endl;
+		oss << m_getOriginString();
+		whatBuffer = oss.str();
+		return whatBuffer.c_str();
+	}
+	const char* Graphics::InfoException::m_getType() const noexcept
+	{
+		return "Graphics Info Exception";
+	}
+	std::string Graphics::InfoException::m_GetErrorInfo() const noexcept
+	{
+		return Info;
 	}
 }

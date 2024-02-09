@@ -1,5 +1,10 @@
 #include "App.h"
 
+// This program is forced to run on NVIDIA Graphics Card!!!!!!!
+extern "C" {
+	__declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+}
+
 App::App()
 	:window{nullptr}
 {
@@ -26,6 +31,7 @@ DoFrame()
 {
 	const float c = sin(timer.Peek()) / 2.0f + 0.5f;
 	window->Gfx().ClearBuffer(1.0f, c,0.0f);
+	window->Gfx().DrawTestTriangle();
 	window->Gfx().EndFrame();
 }
 

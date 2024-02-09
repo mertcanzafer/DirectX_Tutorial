@@ -7,6 +7,7 @@
 
 #include "dxerr.h"
 #include <wrl.h>
+#include <d3dcompiler.h>
 
 namespace graphics
 {
@@ -43,6 +44,17 @@ namespace graphics
 			std::string reason;
 		};
 
+		class InfoException :public Exception
+		{
+		public:
+			InfoException(int line, const char* file, std::vector<std::string>InfoMsgs = {});
+			const char* what()const noexcept override;
+			const char* m_getType()const noexcept override;
+			std::string m_GetErrorInfo()const noexcept;
+		private:
+			std::string Info;
+		};
+
 	public :
 		Graphics(HWND hWnd);
 
@@ -50,6 +62,7 @@ namespace graphics
 		Graphics& operator= (const Graphics& copy) = delete;
 		void EndFrame();
 		void ClearBuffer(float red, float green, float blue)noexcept;
+		void DrawTestTriangle();
 
 		~Graphics() = default;
 	private:
