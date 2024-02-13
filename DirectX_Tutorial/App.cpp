@@ -30,7 +30,7 @@ void App::
 DoFrame()
 {
 	const float c = sin(timer.Peek()) / 2.0f + 0.5f;
-	window->Gfx().ClearBuffer(1.0f, c,0.0f);
+	window->Gfx().ClearBuffer(0.0f, 0.0f,0.0f);
 	window->Gfx().DrawTestTriangle();
 	window->Gfx().EndFrame();
 }

@@ -125,8 +125,8 @@ namespace graphics
 		const Vertex vertices[] =
 		{
 			Vertex(	0.0f,	1.0f),   //
-			Vertex(	-1.0f,	-1.0f),  //   CCLW Order of drawing?
-			Vertex(	1.0f,	-1.0f)   //
+			Vertex(	1.0f,	-1.0f), //   CW order of drawing
+			Vertex(-1.0f,	-1.0f)  //
 		};
 
 		wrl::ComPtr<ID3D11Buffer>pVertexBuffer;
@@ -148,21 +148,64 @@ namespace graphics
 		const UINT stride = sizeof(Vertex);
 		const UINT offset = 0u;
 
-		pImmediateContext->IASetVertexBuffers(0u, 1u, &pVertexBuffer, &stride, &offset);
+		pImmediateContext->IASetVertexBuffers(0u, 1u, pVertexBuffer.GetAddressOf(), &stride, &offset);
 		
-		// Creat Vertex Shader
-		wrl::ComPtr<ID3D11VertexShader> pVertexShader;
+		// Create Pixel Shader
+		wrl::ComPtr<ID3D11PixelShader> pPixelShader;
 		wrl::ComPtr<ID3DBlob> pBlob;
-
-		GFX_THROW_INFO (D3DReadFileToBlob(L"VertexShader.cso", &pBlob));
-		GFX_THROW_INFO (pDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(),
+		GFX_THROW_INFO(D3DReadFileToBlob(L"PixelShader.cso", &pBlob));
+		GFX_THROW_INFO(pDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(),
+			nullptr, &pPixelShader));
+		// Bind the pixel Shader
+		pImmediateContext->PSSetShader(pPixelShader.Get(), nullptr, 0u);
+		
+		// Create Vertex Shader
+		wrl::ComPtr<ID3D11VertexShader> pVertexShader;
+		GFX_THROW_INFO(D3DReadFileToBlob(L"VertexShader.cso", &pBlob));
+		GFX_THROW_INFO(pDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(),
 			nullptr, &pVertexShader));
 
 		// Bind the vertex Shader
-		pImmediateContext->VSSetShader(pVertexShader.Get(), 0, 0);
+		pImmediateContext->VSSetShader(pVertexShader.Get(), nullptr, 0u);
 
-		GFX_THROW_INFO_ONLY (pImmediateContext->Draw((UINT)sizeof(vertices), 0u));
+		// input (vertex) layout (2d position only)
+		wrl::ComPtr<ID3D11InputLayout> pInputLayout;
+
+		const D3D11_INPUT_ELEMENT_DESC ied[] =
+		{
+			{"POSITION",0,DXGI_FORMAT_R32G32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0},
+		};
+
+		GFX_THROW_INFO (pDevice->CreateInputLayout
+		(
+			ied, (UINT)std::size(ied),
+			pBlob->GetBufferPointer(),
+			pBlob->GetBufferSize(),
+			&pInputLayout
+		));
+
+		// bind vertex layout
+		pImmediateContext->IASetInputLayout(pInputLayout.Get());
+
+		// bind render targets
+		pImmediateContext->OMSetRenderTargets(1u, pTarget.GetAddressOf(), nullptr);
+
+		// set primitive topology to triangle list(groups of 3 vertices)
+		pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		// Configure View Port
+		D3D11_VIEWPORT vp{};
+		vp.Height = 720;
+		vp.Width = 980;
+		vp.MinDepth = 0;
+		vp.MaxDepth = 1;
+		vp.TopLeftX = 0;
+		vp.TopLeftY = 0;
+		pImmediateContext->RSSetViewports(1u, &vp);
+
+		GFX_THROW_INFO_ONLY(pImmediateContext->Draw((UINT)std::size(vertices), 0u));
 	}
+
 	// Exception Stuff
 
 	Graphics::HrException::HrException(int line, const char* file, HRESULT hr, std::vector<std::string>InfoMsgs) noexcept
