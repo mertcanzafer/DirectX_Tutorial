@@ -118,15 +118,29 @@ namespace graphics
 		HRESULT hr;
 		struct Vertex
 		{
-			float x;
-			float y;
+			struct
+			{
+				FLOAT x;
+				FLOAT y;
+			}pos;
+
+			struct
+			{
+				BYTE RED;
+				BYTE GREEN;
+				BYTE BLUE;
+				BYTE ALPHA;
+			}color;
 		};
 		// create vertex buffer (1 2d Triangle at the center of the screen)
 		const Vertex vertices[] =
 		{
-			Vertex(	0.0f,	1.0f),   //
-			Vertex(	1.0f,	-1.0f), //   CW order of drawing
-			Vertex(-1.0f,	-1.0f)  //
+			Vertex{	0.0f,	0.5f,  255, 0,  0, 0},  
+			Vertex{ 0.5f,	-0.5f,  0, 255, 0, 0},   
+			Vertex{ -0.5f,	-0.5f,  0,  0, 255,0},   
+			Vertex{ -0.3f,	0.3f,  0,  255, 0,0},
+			Vertex{ 0.3f,	0.3f,  0, 0, 255, 0},
+			Vertex{	0.0f,	-0.8f,  255, 0,  0, 0},
 		};
 
 		wrl::ComPtr<ID3D11Buffer>pVertexBuffer;
@@ -149,7 +163,32 @@ namespace graphics
 		const UINT offset = 0u;
 
 		pImmediateContext->IASetVertexBuffers(0u, 1u, pVertexBuffer.GetAddressOf(), &stride, &offset);
-		
+
+		// create index buffer
+		const unsigned short indices[] =
+		{
+			 0,1,2,
+			 0,2,3,
+			 0,4,1,
+			 2,1,5
+		};
+
+		wrl::ComPtr<ID3D11Buffer>pIndexBuffer;
+		D3D11_BUFFER_DESC ibd = {};
+		ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+		ibd.Usage = D3D11_USAGE_DEFAULT;
+		ibd.CPUAccessFlags = 0u;
+		ibd.MiscFlags = 0u;
+		ibd.ByteWidth = sizeof(indices); // size of indices in byte
+		ibd.StructureByteStride = sizeof(unsigned short);
+
+		D3D11_SUBRESOURCE_DATA isd = {};
+		isd.pSysMem = indices;
+		GFX_THROW_INFO(pDevice->CreateBuffer(&ibd, &isd, &pIndexBuffer));
+
+		// bind index buffer
+		pImmediateContext->IASetIndexBuffer(pIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
+
 		// Create Pixel Shader
 		wrl::ComPtr<ID3D11PixelShader> pPixelShader;
 		wrl::ComPtr<ID3DBlob> pBlob;
@@ -174,6 +213,7 @@ namespace graphics
 		const D3D11_INPUT_ELEMENT_DESC ied[] =
 		{
 			{"POSITION",0,DXGI_FORMAT_R32G32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0},
+			{"COLOR",0, DXGI_FORMAT_R8G8B8A8_UNORM,0,8u,D3D11_INPUT_PER_VERTEX_DATA,0},
 		};
 
 		GFX_THROW_INFO (pDevice->CreateInputLayout
@@ -203,8 +243,8 @@ namespace graphics
 		vp.TopLeftY = 0;
 		pImmediateContext->RSSetViewports(1u, &vp);
 
-		GFX_THROW_INFO_ONLY(pImmediateContext->Draw((UINT)std::size(vertices), 0u));
-	}
+		GFX_THROW_INFO_ONLY(pImmediateContext->DrawIndexed((UINT)std::size(indices),0u ,0u));
+	} 
 
 	// Exception Stuff
 
