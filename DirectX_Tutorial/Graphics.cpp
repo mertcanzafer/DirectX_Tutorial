@@ -135,9 +135,9 @@ namespace graphics
 		// create vertex buffer (1 2d Triangle at the center of the screen)
 		const Vertex vertices[] =
 		{
-			Vertex{	0.0f,	0.5f,  255, 0,  0, 0},  
-			Vertex{ 0.5f,	-0.5f,  0, 255, 0, 0},   
-			Vertex{ -0.5f,	-0.5f,  0,  0, 255,0},   
+			Vertex{	0.0f,	0.5f,  255, 0,  0, 0},
+			Vertex{ 0.5f,	-0.5f,  0, 255, 0, 0},
+			Vertex{ -0.5f,	-0.5f,  0,  0, 255,0},
 			Vertex{ -0.3f,	0.3f,  0,  255, 0,0},
 			Vertex{ 0.3f,	0.3f,  0, 0, 255, 0},
 			Vertex{	0.0f,	-0.8f,  255, 0,  0, 0},
