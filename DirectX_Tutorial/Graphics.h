@@ -62,7 +62,7 @@ namespace graphics
 		Graphics& operator= (const Graphics& copy) = delete;
 		void EndFrame();
 		void ClearBuffer(float red, float green, float blue)noexcept;
-		void DrawTestTriangle();
+		void DrawTestTriangle(float angle);
 
 		~Graphics() = default;
 	private:
@@ -74,5 +74,6 @@ namespace graphics
 		Microsoft::WRL::ComPtr<ID3D11Device>pDevice;
 		Microsoft::WRL::ComPtr<ID3D11DeviceContext>pImmediateContext;
 		Microsoft::WRL::ComPtr<ID3D11RenderTargetView>pTarget;
+		Microsoft::WRL::ComPtr<ID3D11Buffer> pConstantBuffer;
 	};
 }

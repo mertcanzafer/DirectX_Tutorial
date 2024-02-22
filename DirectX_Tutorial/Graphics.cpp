@@ -113,7 +113,7 @@ namespace graphics
 		pImmediateContext->ClearRenderTargetView(pTarget.Get(), color);
 	}
 
-	void Graphics::DrawTestTriangle()
+	void Graphics::DrawTestTriangle(float angle)
 	{
 		HRESULT hr;
 		struct Vertex
@@ -189,6 +189,38 @@ namespace graphics
 		// bind index buffer
 		pImmediateContext->IASetIndexBuffer(pIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
 
+		// Create constant buffer for transformation matrix
+		struct ConstantBuffer
+		{
+			struct
+			{
+				FLOAT element[4][4];
+			}transformation;
+		};
+
+		const ConstantBuffer cb =
+		{
+			{
+			(1.36f) * std::cos(angle),   std::sin(angle),0.0f,0.0f,
+			(1.36f) *  -std::sin(angle), std::cos(angle),0.0f,0.0f,
+						0.0f,            0.0f           ,1.0f,0.0f,
+						0.0f,            0.0f           ,0.0f,1.0f
+			}
+		};
+
+		D3D11_BUFFER_DESC cbd{};
+		cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		cbd.Usage = D3D11_USAGE_DYNAMIC;
+		cbd.ByteWidth = sizeof(cb);
+		cbd.StructureByteStride = 0u;
+		cbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		cbd.MiscFlags = 0u;
+		D3D11_SUBRESOURCE_DATA csd{};
+		csd.pSysMem = &cb;
+		GFX_THROW_INFO (pDevice->CreateBuffer(&cbd, &csd, &pConstantBuffer));
+		// bind constant buffer to vertex shader
+		pImmediateContext->VSSetConstantBuffers(0u, 1u, pConstantBuffer.GetAddressOf());
+
 		// Create Pixel Shader
 		wrl::ComPtr<ID3D11PixelShader> pPixelShader;
 		wrl::ComPtr<ID3DBlob> pBlob;
@@ -218,7 +250,7 @@ namespace graphics
 
 		GFX_THROW_INFO (pDevice->CreateInputLayout
 		(
-			ied, (UINT)std::size(ied),
+			ied, (UINT)ARRAYSIZE(ied),
 			pBlob->GetBufferPointer(),
 			pBlob->GetBufferSize(),
 			&pInputLayout
@@ -243,7 +275,7 @@ namespace graphics
 		vp.TopLeftY = 0;
 		pImmediateContext->RSSetViewports(1u, &vp);
 
-		GFX_THROW_INFO_ONLY(pImmediateContext->DrawIndexed((UINT)std::size(indices),0u ,0u));
+		GFX_THROW_INFO_ONLY(pImmediateContext->DrawIndexed((UINT)ARRAYSIZE(indices),0u ,0u));
 	} 
 
 	// Exception Stuff
