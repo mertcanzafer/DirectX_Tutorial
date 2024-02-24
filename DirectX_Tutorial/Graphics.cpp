@@ -19,6 +19,7 @@
 #endif
 
 namespace wrl = Microsoft::WRL;
+namespace dx = DirectX;
 
 namespace graphics
 {
@@ -113,7 +114,7 @@ namespace graphics
 		pImmediateContext->ClearRenderTargetView(pTarget.Get(), color);
 	}
 
-	void Graphics::DrawTestTriangle(float angle)
+	void Graphics::DrawTestTriangle(float angle, float _Mpx, float _Mpy)
 	{
 		HRESULT hr;
 		struct Vertex
@@ -192,20 +193,16 @@ namespace graphics
 		// Create constant buffer for transformation matrix
 		struct ConstantBuffer
 		{
-			struct
-			{
-				FLOAT element[4][4];
-			}transformation;
+			dx::XMMATRIX transform;
 		};
-
+		// Order: Scale, Rotate and Translate
 		const ConstantBuffer cb =
 		{
-			{
-			(1.36f) * std::cos(angle),   std::sin(angle),0.0f,0.0f,
-			(1.36f) *  -std::sin(angle), std::cos(angle),0.0f,0.0f,
-						0.0f,            0.0f           ,1.0f,0.0f,
-						0.0f,            0.0f           ,0.0f,1.0f
-			}
+			dx::XMMatrixTranspose(						
+				dx::XMMatrixRotationZ(angle) * 
+				dx::XMMatrixScaling(1.36f,1.0f,1.0f) *
+				dx::XMMatrixTranslation((_Mpx / 490.0f) -1.0f,1.0f -(_Mpy / 360.0f),0.0f)
+			)
 		};
 
 		D3D11_BUFFER_DESC cbd{};

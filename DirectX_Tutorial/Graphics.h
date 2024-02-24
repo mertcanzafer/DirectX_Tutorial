@@ -8,6 +8,7 @@
 #include "dxerr.h"
 #include <wrl.h>
 #include <d3dcompiler.h>
+#include <DirectXMath.h>
 
 namespace graphics
 {
@@ -62,7 +63,7 @@ namespace graphics
 		Graphics& operator= (const Graphics& copy) = delete;
 		void EndFrame();
 		void ClearBuffer(float red, float green, float blue)noexcept;
-		void DrawTestTriangle(float angle);
+		void DrawTestTriangle(float angle,float _Mpx,float _Mpy);
 
 		~Graphics() = default;
 	private:
