@@ -76,5 +76,7 @@ namespace graphics
 		Microsoft::WRL::ComPtr<ID3D11DeviceContext>pImmediateContext;
 		Microsoft::WRL::ComPtr<ID3D11RenderTargetView>pTarget;
 		Microsoft::WRL::ComPtr<ID3D11Buffer> pConstantBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer> pConstantColorBuffer;
+		Microsoft::WRL::ComPtr<ID3D11DepthStencilView>pDSV;
 	};
 }

@@ -85,7 +85,43 @@ namespace graphics
 			pBackBuffer.Get(),
 			nullptr,
 			&pTarget
-		));		
+		));
+
+		// First Step
+		// Create depth stensil state
+		D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+		dsDesc.DepthEnable = TRUE;
+		dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+		dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+		wrl::ComPtr<ID3D11DepthStencilState>pDSState;
+		GFX_THROW_INFO( pDevice->CreateDepthStencilState(&dsDesc, &pDSState));
+
+		// Bind depth state
+		pImmediateContext->OMSetDepthStencilState(pDSState.Get(), 1u);
+		// Second Step
+		// Create depth stensil texture
+		wrl::ComPtr<ID3D11Texture2D> DepthStencilTexture;
+		D3D11_TEXTURE2D_DESC dtDesc = {};
+		dtDesc.Width = 980u;
+		dtDesc.Height = 720u;
+		dtDesc.MipLevels = 1u;
+		dtDesc.ArraySize = 1u;
+		dtDesc.Format = DXGI_FORMAT_D32_FLOAT;
+		dtDesc.SampleDesc.Count = 1u;
+		dtDesc.SampleDesc.Quality = 0u;
+		dtDesc.Usage = D3D11_USAGE_DEFAULT;
+		dtDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+		GFX_THROW_INFO(pDevice->CreateTexture2D(&dtDesc, nullptr, &DepthStencilTexture));
+		
+		// Create view of depth stensil texture
+		D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
+		descDSV.Format = dtDesc.Format;
+		descDSV.Texture2D.MipSlice = 0u;
+		descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+
+		GFX_THROW_INFO(pDevice->CreateDepthStencilView(DepthStencilTexture.Get(), &descDSV, &pDSV));
+		// bind depth stensil view to OM;
+		pImmediateContext->OMSetRenderTargets(1u, pTarget.GetAddressOf(), pDSV.Get());
 	}
 
 	void Graphics::EndFrame()
@@ -112,10 +148,15 @@ namespace graphics
 	{
 		const float color[]{ red,green,blue ,1.0f}; // RGBA format red + green + blue + Alpha Channel(1.0f)
 		pImmediateContext->ClearRenderTargetView(pTarget.Get(), color);
+		pImmediateContext->ClearDepthStencilView(pDSV.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0u);
 	}
 
-	void Graphics::DrawTestTriangle(float angle, float _Mpx, float _Mpy)
+	void Graphics::DrawTestTriangle(float angle, float _Mpx, float _Mpz)
 	{
+		// Our aspect ratio calculated from our window dimensions!!!
+		constexpr float aspectRatio = 1.3611f;
+		constexpr UINT NUM_OF_FACES = 6u;
+		
 		HRESULT hr;
 		struct Vertex
 		{
@@ -123,25 +164,21 @@ namespace graphics
 			{
 				FLOAT x;
 				FLOAT y;
+				FLOAT z;
 			}pos;
-
-			struct
-			{
-				BYTE RED;
-				BYTE GREEN;
-				BYTE BLUE;
-				BYTE ALPHA;
-			}color;
 		};
 		// create vertex buffer (1 2d Triangle at the center of the screen)
 		const Vertex vertices[] =
 		{
-			Vertex{	0.0f,	0.5f,  255, 0,  0, 0},
-			Vertex{ 0.5f,	-0.5f,  0, 255, 0, 0},
-			Vertex{ -0.5f,	-0.5f,  0,  0, 255,0},
-			Vertex{ -0.3f,	0.3f,  0,  255, 0,0},
-			Vertex{ 0.3f,	0.3f,  0, 0, 255, 0},
-			Vertex{	0.0f,	-0.8f,  255, 0,  0, 0},
+			Vertex{	-1.0f, -1.0f, -1.0f,},
+			Vertex{ 1.0f, -1.0f	,-1.0f,},
+			Vertex{ -1.0f,	1.0f,-1.0f,	},
+			Vertex{ 1.0f,	1.0f,-1.0f,	},
+
+			Vertex{ -1.0f,	-1.0f,1.0f,},
+			Vertex{	1.0f,-1.0f,1.0f,},
+			Vertex{	-1.0f,1.0f,1.0f,},
+			Vertex{	1.0f,1.0f,1.0f,},
 		};
 
 		wrl::ComPtr<ID3D11Buffer>pVertexBuffer;
@@ -168,10 +205,12 @@ namespace graphics
 		// create index buffer
 		const unsigned short indices[] =
 		{
-			 0,1,2,
-			 0,2,3,
-			 0,4,1,
-			 2,1,5
+			0,2,1,			2,3,1,
+			1,3,5,			3,7,5,
+			2,6,3,			3,6,7,
+			4,5,7,			4,7,6,
+			0,4,2,			2,4,6,
+			0,1,4,			1,5,4
 		};
 
 		wrl::ComPtr<ID3D11Buffer>pIndexBuffer;
@@ -200,8 +239,9 @@ namespace graphics
 		{
 			dx::XMMatrixTranspose(						
 				dx::XMMatrixRotationZ(angle) * 
-				dx::XMMatrixScaling(1.36f,1.0f,1.0f) *
-				dx::XMMatrixTranslation((_Mpx / 490.0f) -1.0f,1.0f -(_Mpy / 360.0f),0.0f)
+				dx::XMMatrixRotationX(angle) *
+				dx::XMMatrixTranslation(_Mpx,0.0f,_Mpz + 4.0f) *
+				dx::XMMatrixPerspectiveLH(1.0f,aspectRatio,0.5f,10.0f)
 			)
 		};
 
@@ -217,6 +257,42 @@ namespace graphics
 		GFX_THROW_INFO (pDevice->CreateBuffer(&cbd, &csd, &pConstantBuffer));
 		// bind constant buffer to vertex shader
 		pImmediateContext->VSSetConstantBuffers(0u, 1u, pConstantBuffer.GetAddressOf());
+
+		// Create a second constant buffer for holding color info
+		struct ConstantBuffer2 
+		{
+			struct
+			{
+				FLOAT r;
+				FLOAT g;
+				FLOAT b;
+				FLOAT a;
+			}face_colors;
+		};
+
+		ConstantBuffer2 cb2[NUM_OF_FACES] =
+		{
+			ConstantBuffer2{1.0f,0.0f,1.0f,1.0f}, // FACE 1 = First 2 triangles
+			ConstantBuffer2{1.0f,0.0f,0.0f,1.0f}, // FACE 2
+			ConstantBuffer2{0.0f,1.0f,0.0f,1.0f}, // FACE 3
+			ConstantBuffer2{0.0f,0.0f,1.0f,1.0f}, // FACE 4
+			ConstantBuffer2{1.0f,1.0f,0.0f,1.0f}, // FACE 5
+			ConstantBuffer2{0.0f,1.0f,1.0f,1.0f}, // FACE 6
+		};
+
+		D3D11_BUFFER_DESC cbd2 = {};
+		cbd2.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		cbd2.Usage = D3D11_USAGE_DYNAMIC;
+		cbd2.ByteWidth = sizeof(cb2);
+		cbd2.StructureByteStride = 0u;
+		cbd2.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		cbd2.MiscFlags = 0u;
+		D3D11_SUBRESOURCE_DATA csd2 = {};
+		csd2.pSysMem = cb2;
+		GFX_THROW_INFO(	pDevice->CreateBuffer(&cbd2, &csd2, &pConstantColorBuffer));
+
+		//bind constant buffer to pixel shader
+		pImmediateContext->PSSetConstantBuffers(0u, 1u, pConstantColorBuffer.GetAddressOf());
 
 		// Create Pixel Shader
 		wrl::ComPtr<ID3D11PixelShader> pPixelShader;
@@ -241,8 +317,7 @@ namespace graphics
 
 		const D3D11_INPUT_ELEMENT_DESC ied[] =
 		{
-			{"POSITION",0,DXGI_FORMAT_R32G32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0},
-			{"COLOR",0, DXGI_FORMAT_R8G8B8A8_UNORM,0,8u,D3D11_INPUT_PER_VERTEX_DATA,0},
+			{"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT ,D3D11_INPUT_PER_VERTEX_DATA,0},
 		};
 
 		GFX_THROW_INFO (pDevice->CreateInputLayout
@@ -255,9 +330,6 @@ namespace graphics
 
 		// bind vertex layout
 		pImmediateContext->IASetInputLayout(pInputLayout.Get());
-
-		// bind render targets
-		pImmediateContext->OMSetRenderTargets(1u, pTarget.GetAddressOf(), nullptr);
 
 		// set primitive topology to triangle list(groups of 3 vertices)
 		pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

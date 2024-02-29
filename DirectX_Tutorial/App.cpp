@@ -31,7 +31,13 @@ DoFrame()
 {
 	const float c = sin(timer.Peek()) / 2.0f + 0.5f;
 	window->Gfx().ClearBuffer(0.0f, 0.0f,0.0f);
-	window->Gfx().DrawTestTriangle(timer.Peek(),window->mouse.GetXpos(),window->mouse.GetYpos());
+	window->Gfx().DrawTestTriangle(-timer.Peek(),0.0f,0.0f);
+	window->Gfx().DrawTestTriangle
+	(
+		timer.Peek(), 
+		(window->mouse.GetXpos() / 490.0f) - 1.0f,
+		1.0f - (window->mouse.GetYpos() / 360.0f)
+	);
 	window->Gfx().EndFrame();
 }
 
