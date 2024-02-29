@@ -1,4 +1,11 @@
-float4 main(float3 color: COLOR) : SV_TARGET
+static const unsigned int NUM_OF_FACES = 6;
+
+cbuffer Cbuff
 {
-    return float4(color,1.0f);
+    float4 face_colors[NUM_OF_FACES];
+};
+
+float4 main(unsigned int tid:SV_PrimitiveID) : SV_TARGET
+{
+    return face_colors[tid / 2];
 }
