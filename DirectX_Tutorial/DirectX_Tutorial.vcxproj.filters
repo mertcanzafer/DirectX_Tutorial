@@ -48,6 +48,15 @@
     <ClCompile Include="DxgiInfoManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Bindable\Topology.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Bindable\VertexShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Bindable\PixelShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WindowsMessageMap.h">
@@ -84,6 +93,24 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DxgiInfoManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Macros\GraphicsThrowMacros.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Macros\WindowThrowMacro.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Bindable\Bindable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Bindable\Topology.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Bindable\VertexShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Bindable\PixelShader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

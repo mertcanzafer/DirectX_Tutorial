@@ -10,10 +10,13 @@
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
 
+#include "Macros\GraphicsThrowMacros.h"
+
 namespace graphics
 {
 	class Graphics
 	{
+		friend class Bindable;
 	public:
 		class Exception :public Exception_Handler
 		{

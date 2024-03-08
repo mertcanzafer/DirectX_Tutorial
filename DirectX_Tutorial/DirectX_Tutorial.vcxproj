@@ -20,6 +20,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="Bindable\PixelShader.cpp" />
+    <ClCompile Include="Bindable\Topology.cpp" />
+    <ClCompile Include="Bindable\VertexShader.cpp" />
     <ClCompile Include="dxerr.cpp" />
     <ClCompile Include="DxgiInfoManager.cpp" />
     <ClCompile Include="Exception_Handler.cpp" />
@@ -33,17 +36,23 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
+    <ClInclude Include="Bindable\Bindable.h" />
+    <ClInclude Include="Bindable\PixelShader.h" />
+    <ClInclude Include="Bindable\Topology.h" />
+    <ClInclude Include="Bindable\VertexShader.h" />
     <ClInclude Include="dxerr.h" />
     <ClInclude Include="DxgiInfoManager.h" />
     <ClInclude Include="Exception_Handler.h" />
     <ClInclude Include="FixedWin.h" />
     <ClInclude Include="Graphics.h" />
+    <ClInclude Include="Macros\GraphicsThrowMacros.h" />
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="TimerClass.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="WindowsMessageMap.h" />
+    <ClInclude Include="Macros\WindowThrowMacro.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DirectX_Tutorial.rc" />
