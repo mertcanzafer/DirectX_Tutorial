@@ -8,6 +8,10 @@ PixelShader::PixelShader
 	INFOMAN(gfx);
 	wrl::ComPtr<ID3DBlob>pBlob;
 	
+	/* No need to create a HRESULT hr since INFOMAN macro is creating 
+	  a HRESULT variable already in this scope.	
+	*/
+	
 	GFX_THROW_INFO(D3DReadFileToBlob(PSfileLoc.c_str(), &pBlob));
 	GFX_THROW_INFO(	GetDevice(gfx)->CreatePixelShader
 	(

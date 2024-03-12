@@ -9,6 +9,7 @@
 #include <wrl.h>
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
+#include <memory.h>
 
 #include "Macros\GraphicsThrowMacros.h"
 
