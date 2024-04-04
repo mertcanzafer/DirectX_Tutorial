@@ -41,6 +41,7 @@
     <ClInclude Include="Bindable\ConstantBuffers.h" />
     <ClInclude Include="Bindable\PixelShader.h" />
     <ClInclude Include="Bindable\Topology.h" />
+    <ClInclude Include="Bindable\VertexBuffer.h" />
     <ClInclude Include="Bindable\VertexShader.h" />
     <ClInclude Include="dxerr.h" />
     <ClInclude Include="DxgiInfoManager.h" />
