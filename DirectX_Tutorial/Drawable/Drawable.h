@@ -2,6 +2,7 @@
 #include "../Graphics.h"
 #include <DirectXMath.h>
 #include "../Macros/GraphicsThrowMacros.h"
+#include <random> 
 
 namespace wrl = Microsoft::WRL;
 class Bindable;
